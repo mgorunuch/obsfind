@@ -1,3 +1,5 @@
+![ObsFind](banner.png)
+
 # ObsFind
 
 Semantic search for Obsidian vaults using vector embeddings.
