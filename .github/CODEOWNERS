@@ -1,0 +1,40 @@
+# This file determines the code owners for different parts of the repository
+# Code owners are automatically requested for review when someone opens a pull request
+
+# Default owners for everything in the repo
+# Replace with actual GitHub usernames of maintainers
+* @mgorunuch
+
+# Core components
+/src/cmd/ @mgorunuch
+/src/pkg/api/ @mgorunuch
+/src/pkg/daemon/ @mgorunuch
+/src/pkg/indexer/ @mgorunuch
+/src/pkg/model/ @mgorunuch
+
+# Infrastructure
+/.github/ @mgorunuch
+/docker/ @mgorunuch
+/scripts/ @mgorunuch
+/.goreleaser.yml @mgorunuch
+
+# Documentation
+/README.md @mgorunuch
+/CONTRIBUTING.md @mgorunuch
+/docs/ @mgorunuch
+
+# Configuration
+/src/pkg/config/ @mgorunuch
+
+# Utils
+/src/pkg/consoleutil/ @mgorunuch
+/src/pkg/contextutil/ @mgorunuch
+/src/pkg/loggingutil/ @mgorunuch
+/src/pkg/markdown/ @mgorunuch
+/src/pkg/httputil/ @mgorunuch
+
+# Database
+/src/pkg/qdrant/ @mgorunuch
+
+# Tasks and planning
+/TASKS.md @mgorunuch

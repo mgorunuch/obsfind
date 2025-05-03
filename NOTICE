@@ -1,0 +1,59 @@
+ObsFind
+Copyright (c) 2023-2025 ObsFind Contributors.
+
+This software is licensed under the MIT License, the full text of which can
+be found in the LICENSE file in the root directory of this repository.
+
+Third Party Components:
+
+1. Qdrant Client for Go
+   Copyright 2023 Qdrant
+   Licensed under the Apache License, Version 2.0
+   https://github.com/qdrant/go-client
+
+2. sentence-transformers models
+   These models are used for embedding generation and are subject to their
+   respective licenses.
+   https://www.sbert.net/
+
+3. chi HTTP router
+   Copyright (c) 2015-present Peter Kieltyka, Google Inc.
+   Licensed under the MIT License
+   https://github.com/go-chi/chi
+
+4. Viper configuration library
+   Copyright (c) 2014 Steve Francia
+   Licensed under the MIT License
+   https://github.com/spf13/viper
+
+5. Cobra CLI framework
+   Copyright © 2015 Steve Francia
+   Licensed under the Apache License, Version 2.0
+   https://github.com/spf13/cobra
+
+6. Testify testing toolkit
+   Copyright (c) 2012-2020 Mat Ryer, Tyler Bunnell and contributors
+   Licensed under the MIT License
+   https://github.com/stretchr/testify
+
+7. watchdog file system monitoring
+   Copyright (c) 2010 Kuba Ober, Gora Networks LLC
+   Copyright (c) 2011 Kristján Valur Jónsson, Kristján Valur Jónsson
+   Copyright (c) 2011 Raymond Hettinger, Python Software Foundation
+   Copyright (c) 2011-2013 Yesudeep Mangalapilly, Google Inc.
+   Copyright (c) 2019 Mikhail Erofeev
+   Copyright (c) 2019 Dirk Gilhaus
+   Copyright (c) 2015-2022 gorakhargosh, Nicholas Gerasimov, Graham Edgecombe,
+                           Ben Pirt, Mithrandir
+   Licensed under the Apache License, Version 2.0
+   https://github.com/fsnotify/fsnotify
+
+8. zerolog structured logging
+   Copyright (c) 2017 Olivier Poitrey
+   Licensed under the MIT License
+   https://github.com/rs/zerolog
+
+This NOTICE file contains acknowledgments of third-party components. For the
+complete set of dependencies and their licenses, run the license checker:
+
+make licenses

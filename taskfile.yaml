@@ -1,0 +1,39 @@
+version: '3'
+
+vars:
+  BINARY_NAME: obsfind
+  DAEMON_NAME: obsfindd
+  VERSION: 0.1.0
+  BUILD_DIR: ./bin
+  GO_FLAGS: '-ldflags "-X main.version={{.VERSION}}"'
+
+tasks:
+  default:
+    desc: Build all binaries
+    deps: [build]
+
+  build:
+    desc: Build all binaries
+    deps: [build:cli, build:daemon]
+
+  build:cli:
+    desc: Build CLI binary
+    cmds:
+      - echo "Building CLI..."
+      - mkdir -p {{.BUILD_DIR}}
+      - go build {{.GO_FLAGS}} -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/cli
+    sources:
+      - cmd/cli/**/*.go
+    generates:
+      - "{{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  build:daemon:
+    desc: Build daemon binary
+    cmds:
+      - echo "Building daemon..."
+      - mkdir -p {{.BUILD_DIR}}
+      - go build {{.GO_FLAGS}} -o {{.BUILD_DIR}}/{{.DAEMON_NAME}} ./cmd/daemon
+    sources:
+      - cmd/daemon/**/*.go
+    generates:
+      - "{{.BUILD_DIR}}/{{.DAEMON_NAME}}"

@@ -1,0 +1,104 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+          check-latest: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Check formatting
+        run: |
+          if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then
+            gofmt -d .
+            echo "Please run 'go fmt ./...' to format your code."
+            exit 1
+          fi
+
+      - name: Run vet
+        run: go vet ./...
+
+      - name: Install golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+
+      - name: Run golangci-lint
+        run: $(go env GOPATH)/bin/golangci-lint run ./...
+
+      - name: Check test coverage
+        run: |
+          go test -coverprofile=coverage.txt -covermode=atomic ./...
+          go tool cover -func=coverage.txt
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.txt
+          fail_ci_if_error: false
+
+      - name: Check TODOs without issue references
+        run: |
+          TODO_COUNT=$(grep -r "TODO" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" | grep -v "#[0-9]\+" | wc -l)
+          if [ $TODO_COUNT -gt 0 ]; then
+            echo "Found $TODO_COUNT TODO items without issue references:"
+            grep -r "TODO" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" | grep -v "#[0-9]\+"
+            echo "Please reference issues in TODOs (e.g., TODO(#123): ...)"
+          fi
+
+      - name: Check debug prints
+        run: |
+          PRINT_COUNT=$(grep -r -E "fmt.Print|log.Print" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" -e "_test.go" -e "logger.go" | wc -l)
+          if [ $PRINT_COUNT -gt 5 ]; then
+            echo "Found too many print statements ($PRINT_COUNT):"
+            grep -r -E "fmt.Print|log.Print" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" -e "_test.go" -e "logger.go"
+            echo "Consider using structured logging instead."
+          fi
+
+      - name: Check commented code
+        run: |
+          COMMENT_COUNT=$(grep -r -E "^[[:space:]]*//[[:space:]]*[a-zA-Z0-9_]+[[:space:]]*\([^)]*\)" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" -e "_test.go" | wc -l)
+          if [ $COMMENT_COUNT -gt 0 ]; then
+            echo "Found $COMMENT_COUNT commented code blocks:"
+            grep -r -E "^[[:space:]]*//[[:space:]]*[a-zA-Z0-9_]+[[:space:]]*\([^)]*\)" --include="*.go" . | grep -v -e "/vendor/" -e "/.git/" -e "_test.go"
+            echo "Please remove commented code before merging."
+          fi
+
+      - name: Generate code quality report
+        run: |
+          # Create report file
+          REPORT="code_quality_report.txt"
+          echo "Code Quality Report - $(date)" > $REPORT
+          echo "============================" >> $REPORT
+          echo "" >> $REPORT
+          
+          # Check test coverage
+          echo "Test Coverage:" >> $REPORT
+          go tool cover -func=coverage.txt >> $REPORT
+          
+          # Print summary
+          cat $REPORT
+          
+          # Upload report as artifact
+          mkdir -p code-quality-reports
+          mv $REPORT code-quality-reports/
+
+      - name: Upload code quality report
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-quality-reports
+          path: code-quality-reports/
