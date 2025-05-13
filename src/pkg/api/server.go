@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"obsfind/src/pkg/consts"
-	"obsfind/src/pkg/contextutil"
 	"obsfind/src/pkg/httputil"
 	"obsfind/src/pkg/loggingutil"
 	"strings"
