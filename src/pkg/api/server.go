@@ -103,8 +103,8 @@ type ErrorResponse struct {
 
 // handleHealth handles health check requests
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodGet) {
@@ -117,8 +117,8 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 // handleStatus handles daemon status requests
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodGet) {
@@ -140,9 +140,8 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 // handleSearchQuery handles search query requests
 func (s *Server) handleSearchQuery(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
+	// Use the request's context but enhance it with our logger
 	ctx := r.Context()
-	ctx = contextutil.Background() // Use our own context
 	logger := loggingutil.Get(ctx)
 
 	// Accept both GET and POST methods for flexibility
@@ -169,6 +168,14 @@ func (s *Server) handleSearchQuery(w http.ResponseWriter, r *http.Request) {
 		results, err := s.service.Search(ctx, query, limit, filter)
 		if err != nil {
 			logger.Error("Search failed", "error", err, "query", query)
+			
+			// Handle embedding service errors with a more user-friendly message
+			if strings.Contains(err.Error(), "embedding service unavailable") {
+				httputil.WriteError(w, "Search unavailable: embedding service is not running. Please check if Ollama is running.", http.StatusServiceUnavailable)
+				return
+			}
+			
+			// Return a generic error for other issues
 			httputil.WriteError(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
 			return
 		}
@@ -221,6 +228,14 @@ func (s *Server) handleSearchQuery(w http.ResponseWriter, r *http.Request) {
 		results, err := s.service.Search(ctx, request.Query, request.Limit, filter)
 		if err != nil {
 			logger.Error("Search failed", "error", err, "query", request.Query)
+			
+			// Handle embedding service errors with a more user-friendly message
+			if strings.Contains(err.Error(), "embedding service unavailable") {
+				httputil.WriteError(w, "Search unavailable: embedding service is not running. Please check if Ollama is running.", http.StatusServiceUnavailable)
+				return
+			}
+			
+			// Return a generic error for other issues
 			httputil.WriteError(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
 			return
 		}
@@ -235,8 +250,8 @@ func (s *Server) handleSearchQuery(w http.ResponseWriter, r *http.Request) {
 
 // handleSearchSimilar handles similar document search requests
 func (s *Server) handleSearchSimilar(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodPost) {
@@ -274,6 +289,20 @@ func (s *Server) handleSearchSimilar(w http.ResponseWriter, r *http.Request) {
 	results, err := s.service.FindSimilar(ctx, request.FilePath, request.Limit)
 	if err != nil {
 		logger.Error("Similar search failed", "error", err, "path", request.FilePath)
+		
+		// Handle embedding service errors with a more user-friendly message
+		if strings.Contains(err.Error(), "embedding service unavailable") {
+			httputil.WriteError(w, "Search unavailable: embedding service is not running. Please check if Ollama is running.", http.StatusServiceUnavailable)
+			return
+		}
+		
+		// Handle document not found errors
+		if strings.Contains(err.Error(), "document not found") {
+			httputil.WriteError(w, fmt.Sprintf("Document not found: %s", request.FilePath), http.StatusNotFound)
+			return
+		}
+		
+		// Return a generic error for other issues
 		httputil.WriteError(w, fmt.Sprintf("Similar search failed: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -286,8 +315,8 @@ func (s *Server) handleSearchSimilar(w http.ResponseWriter, r *http.Request) {
 
 // handleIndexFile handles file indexing requests
 func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodPost) {
@@ -331,8 +360,8 @@ func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 
 // handleIndexAll handles full reindexing requests
 func (s *Server) handleIndexAll(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodPost) {
@@ -366,8 +395,8 @@ func (s *Server) handleIndexAll(w http.ResponseWriter, r *http.Request) {
 
 // handleIndexStatus handles indexing status requests
 func (s *Server) handleIndexStatus(w http.ResponseWriter, r *http.Request) {
-	// Create a context with logger for this request
-	ctx := contextutil.Background()
+	// Use the request's context but enhance it with our logger
+	ctx := r.Context()
 	logger := loggingutil.Get(ctx)
 
 	if !httputil.MethodChecker(w, r, http.MethodGet) {

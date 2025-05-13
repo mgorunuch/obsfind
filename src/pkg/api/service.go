@@ -221,11 +221,14 @@ func (s *Service) Search(ctx context.Context, query string, limit int, filter st
 	// Step 1: Generate embedding for the query
 	embeddings, err := s.embedder.EmbedBatch(ctx, []string{query})
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate embedding for query: %w", err)
+		log.Error().Err(err).Str("query", query).Msg("Embedding generation failed")
+		// Return an explicit user-friendly error message
+		return nil, fmt.Errorf("unable to process search query: embedding service unavailable - please check if Ollama is running")
 	}
 
 	if len(embeddings) == 0 {
-		return nil, fmt.Errorf("empty embedding generated for query")
+		log.Warn().Str("query", query).Msg("Empty embedding generated")
+		return nil, fmt.Errorf("search processing error: empty embedding generated")
 	}
 
 	// Note: We're getting the embedding but not using it directly here
@@ -245,9 +248,10 @@ func (s *Service) Search(ctx context.Context, query string, limit int, filter st
 		return nil, fmt.Errorf("search failed: %w", err)
 	}
 
-	// Check if we have any results
+	// Handle empty results - return empty slice instead of error
 	if len(indexerResults) == 0 {
-		return nil, fmt.Errorf("no results found - your vault may not be indexed yet")
+		log.Info().Msg("No search results found")
+		return []SearchResult{}, nil
 	}
 
 	// Step 4: Convert indexer results to API results
@@ -367,12 +371,27 @@ func (s *Service) FindSimilar(ctx context.Context, filePath string, limit int) (
 	// Execute similar search via indexer
 	indexerResults, err := s.indexer.FindSimilar(ctx, filePath, searchOptions)
 	if err != nil {
+		// Check if this is a "document not found" error
+		if strings.Contains(err.Error(), "document not found") {
+			log.Warn().Str("path", filePath).Msg("Document not found in index for similar search")
+			return []SearchResult{}, nil
+		}
+		
+		// Check if this is a vector embedding error
+		if strings.Contains(err.Error(), "no vectors found") {
+			log.Warn().Str("path", filePath).Msg("No vectors found for document in similar search")
+			return []SearchResult{}, nil
+		}
+		
+		// Log other errors
+		log.Error().Err(err).Str("path", filePath).Msg("Similar search failed")
 		return nil, fmt.Errorf("similar search failed: %w", err)
 	}
 
-	// Check if we have any results
+	// Handle empty results - return empty slice instead of error
 	if len(indexerResults) == 0 {
-		return nil, fmt.Errorf("no similar documents found - your vault may not be indexed yet")
+		log.Info().Msg("No similar documents found")
+		return []SearchResult{}, nil
 	}
 
 	// Convert indexer results to API results
